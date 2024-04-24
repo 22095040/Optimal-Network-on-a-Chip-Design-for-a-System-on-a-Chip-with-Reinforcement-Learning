@@ -1,0 +1,59 @@
+# Data structure to represent the monitor output
+class MonitorEntry:
+    def __init__(self, timestamp, txn_type, data):
+        self.timestamp = timestamp
+        self.txn_type = txn_type
+        self.data = data
+
+# Function to calculate average latency
+def calculate_avg_latency(monitor_output):
+    read_latencies = []
+    # Traverse through the monitor output to find pairs of "Rd" and "Data"
+    for i in range(len(monitor_output) - 1):
+        if (
+            monitor_output[i].txn_type == "Rd"
+            and monitor_output[i + 1].txn_type == "Data"
+        ):
+            latency = monitor_output[i + 1].timestamp - monitor_output[i].timestamp
+            read_latencies.append(latency)
+
+    if read_latencies:
+        return sum(read_latencies) / len(read_latencies)
+    else:
+        return None
+
+
+# Function to calculate average bandwidth
+def calculate_avg_bandwidth(monitor_output):
+    total_bytes_transferred = 0
+    # Traverse through the monitor output and sum up the data sizes
+    for entry in monitor_output:
+        if entry.data is not None:
+            total_bytes_transferred += 32  # Assuming data size is 32 bytes per transfer
+
+    # Total time elapsed in cycles (last timestamp - first timestamp)
+    total_cycles = monitor_output[-1].timestamp - monitor_output[0].timestamp
+
+    # Bandwidth in bytes per cycle
+    bandwidth = total_bytes_transferred / total_cycles
+    return bandwidth
+
+
+# Example monitor output
+monitor_output = [
+    MonitorEntry(0, "Rd", None),
+    MonitorEntry(2, "Wr", "'hxxxxxxxx"),
+    MonitorEntry(4, "Wr", "'hyyyyyyyy"),
+    MonitorEntry(10, "Data", "'hzzzzzzzz"),
+    MonitorEntry(12, "Wr", "'haaaaaaaa"),
+    MonitorEntry(14, "Wr", "'hcccccccc"),
+    MonitorEntry(20, "Data", "'hwwwwwwww"),
+]
+
+# Calculate average latency
+avg_latency = calculate_avg_latency(monitor_output)
+print("Average Latency:", avg_latency)
+
+# Calculate average bandwidth
+avg_bandwidth = calculate_avg_bandwidth(monitor_output)
+print("Average Bandwidth:", avg_bandwidth)
